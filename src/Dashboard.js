@@ -1,21 +1,33 @@
-import { Button, Space, Table } from "antd";
+import { Button, Input, Space, Table } from "antd";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { deleteTodo } from "./features/todo/todoSlice";
 import { StatusTag } from "./StatusTag";
 
-const onChange = (pagination, filters, sorter, extra) => {
-    console.log('params', pagination, filters, sorter, extra);
-};
+// const onChange = (pagination, filters, sorter, extra) => {
+//     console.log('params', pagination, filters, sorter, extra);
+// };
 
 const Dashboard = () => {
     const { todoList } = useSelector(state => state.todo)
     const dispatch = useDispatch()
+    // const [searchText, setSearchText] = useState('');
+
 
     const deleteTodoItem = (data) => {
         dispatch(deleteTodo(data))
     }
+
+    const handleSearch = (selectedKeys, confirm, dataIndex) => {
+        confirm();
+        // setSearchText(selectedKeys[0]);
+    };
+
+    const handleReset = (clearFilters) => {
+        clearFilters();
+        // setSearchText('');
+    };
 
     const columns = [
         {
@@ -26,12 +38,49 @@ const Dashboard = () => {
             title: 'Task name',
             dataIndex: 'name',
             key: 'name',
-            filterMode: 'tree',
-            // onFilter: (value, record) => record['name'] ? record['name'].toString().toLowerCase().includes(value.toLowerCase()) : false,
-            // // filters: true,
-            filterSearch: true,
-            onFilter: (value, record) => record.name.includes(value),
-            sorter: (a, b) => a.name - b.name,
+            filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+                <div
+                    style={{
+                        padding: 8,
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
+                >
+                    <Input
+                        placeholder={`Search Todo`}
+                        value={selectedKeys[0]}
+                        onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+                        onPressEnter={() => handleSearch(selectedKeys, confirm, 'name')}
+                        style={{
+                            marginBottom: 8,
+                            display: 'block',
+                        }}
+                    />
+                    <Space>
+                        <Button
+                            type="primary"
+                            onClick={() => handleSearch(selectedKeys, confirm, 'name')}
+                            size="small"
+                            style={{
+                                width: 90,
+                            }}
+                        >
+                            Search
+                        </Button>
+                        <Button
+                            onClick={() => clearFilters && handleReset(clearFilters)}
+                            size="small"
+                            style={{
+                                width: 90,
+                            }}
+                        >
+                            Reset
+                        </Button>
+                    </Space>
+                </div>
+            ),
+            sorter: (a, b) => a.name.length - b.name.length,
+            // onFilter: (value, record) => record.name.includes(value),
+            // sorter: (a, b) => a.name - b.name,
         },
         {
             title: 'Priority',
@@ -91,7 +140,7 @@ const Dashboard = () => {
     return (
         <>
             <Link to='/add-todo' type="primary" className="primary">Add todo</Link>
-            <Table columns={columns} dataSource={todoList} onChange={onChange} pagination={false} />
+            <Table columns={columns} dataSource={todoList} onChange={handleSearch} pagination={false} />
         </>
     )
 }
